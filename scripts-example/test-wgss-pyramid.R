@@ -3,6 +3,9 @@ require(pacman)
 p_load(impactR.utils, impactR.kobo, impactR.analysis, humind, srvyr, dplyr, tidyr, ggplot2, stringr)
 
 # Prepare datasets --------------------------------------------------------
+library(impactR.utils)
+dummy_raw_data <- impactR.utils::import_full_xlsx("data-raw/dummy_raw_data.xlsx", clean_names = F)
+usethis::use_data(dummy_raw_data, overwrite = TRUE)
 
 loop <- left_joints_dup(list(
   loop = dummy_raw_data$roster,
@@ -14,7 +17,6 @@ loop <- left_joints_dup(list(
 main <- dummy_raw_data$main %>% mutate(weight=1)
 
 # Use WGSS functions--------------------------------------------------------
-
 source("R/internals.R")
 source("R/add_loop_wgq_ss.R")
 
@@ -103,4 +105,21 @@ compare.sample %>%
                              val_women = "female",
                              val_men = "male",
                              age.labs = NULL)
+
+### Test add phone_coverage functions --------------------------------------
+source("R/add_phone_coverage.R")
+tool_v11 <- readxl::read_excel("data-raw/REACH_2024_MSNA-kobo-tool_draft_v11.xlsx", 2) %>% filter(str_detect(name, "phone|coverage")) %>% mutate(label=`label::english`)
+choice_v11 <- readxl::read_excel("data-raw/REACH_2024_MSNA-kobo-tool_draft_v11.xlsx", 3) %>% filter(str_detect(list_name, "phone|coverage")) %>% mutate(label=`label::english`)
+
+## generate random data just for the two etc indicators --------------------
+main <- main %>%
+  mutate(etc_access_to_phone = sample(choice_v11 %>% filter(list_name=="phone_type") %>% pull(name), nrow(main), replace = T),
+         etc_coverage_network_type = sample(choice_v11 %>% filter(list_name=="coverage_network_type") %>% pull(name), nrow(main), replace = T) %>%
+           ifelse(etc_access_to_phone %in% c("none", "dnk", "pnta"), NA, .))
+
+## add best type of phone and coverage phone combined indicators to main dataset --------------------------------------
+main <- main %>% 
+  etc_access_phone_best() %>%
+  etc_no_coverage_or_phone()
+
 

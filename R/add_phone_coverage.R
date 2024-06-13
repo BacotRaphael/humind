@@ -54,10 +54,10 @@ etc_access_phone_best <- function(
 #' @return The data frame with the new variable
 #' 
 etc_no_coverage_or_phone <- function(df=main, 
-                                     col_coverage_internet="etc_coverage_internet",
+                                     col_coverage_internet="etc_coverage_network_type",
                                      choice_no_coverage="no_coverage",
-                                     choice_no_internet=c("only_sms", "voice_no_internet"),
-                                     choice_internet="internet",
+                                     choice_no_internet=c("only_sms", "only_voice", "voice_sms"),
+                                     choice_internet=c("voice_sms_internet", "only_internet"),
                                      col_access="etc_access_to_phone_select_one",
                                      choice_no_phone="none",
                                      choice_basic_phone="basic_phone",
@@ -72,8 +72,8 @@ etc_no_coverage_or_phone <- function(df=main,
   if_not_in_stop(df, col_access, "df")
   
   # Check if all values are in set
-  are_values_in_set(df, col_coverage_internet, c(choice_no_coverage, choice_no_internet, choice_internet, choice_dnk, choice_pnta)))
-are_values_in_set(df, col_access, c(choice_no_phone, choice_basic_phone, choice_feature_phone, choice_smartphone, choice_dnk, choice_pnta))
+  are_values_in_set(df, col_coverage_internet, c(choice_no_coverage, choice_no_internet, choice_internet, choice_dnk, choice_pnta))
+  are_values_in_set(df, col_access, c(choice_no_phone, choice_basic_phone, choice_feature_phone, choice_smartphone, choice_dnk, choice_pnta))
 
 df <- df %>%
   mutate(
