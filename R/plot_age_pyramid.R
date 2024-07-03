@@ -23,29 +23,34 @@ plot_age_pyramid  <- function(df=age_table,
                               age.labs=NULL,
                               value_men="male",
                               value_women="female",
+                              title = NULL,
+                              subtitle = NULL,
+                              n_col=2,
                               dir = paste0("age_pyramid_ind.csv")){
   
   max <- round((max(df[[col_stat]])+.05)*10)/10
   if (is.null(age.labs)) age.labs <- df %>% mutate(start_age = as.numeric(sub(".*?([0-9]+).*", "\\1", !!sym(var_age_cat)))) %>%
       arrange(start_age) %>% select(-start_age) %>% pull(var_age_cat) %>% unique
+  if (is.null(title)) plot_title <- paste0(unit, " age pyramid by gender") else plot_title <- title
   
     plot <- df %>%
-    ggplot(aes(x = !!sym(var_age_cat), y = !!sym(col_stat), fill = !!sym(var_gender))) +
-    geom_bar(data = df %>% filter(!!sym(var_gender) == value_men), stat = "identity", position = "identity") +
-    geom_bar(data = df %>% filter(!!sym(var_gender) == value_women), stat = "identity", position = "identity", aes(y = -!!sym(col_stat))) +
-    scale_x_discrete(labels = age.labs) + scale_y_continuous(labels = function(x) {scales::percent(abs(x))}, limits = c(-max,max)) +
-    scale_fill_manual(values = setNames(c("#EE5859", "#0067A9"), c(value_women, value_men))) +
-    labs(title = paste0(unit, " age pyramid by gender"), x = "", y = paste0("% of ", tolower(unit), "s"), fill=paste0(unit, " gender")) +
-    theme_minimal() + theme(plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5, size=9), legend.position = "bottom") +
-    coord_flip()
+      ggplot(aes(x = !!sym(var_age_cat), y = !!sym(col_stat), fill = !!sym(var_gender))) +
+      geom_bar(data = df %>% filter(!!sym(var_gender) == value_men), stat = "identity", position = "identity") +
+      geom_bar(data = df %>% filter(!!sym(var_gender) == value_women), stat = "identity", position = "identity", aes(y = -!!sym(col_stat))) +
+      scale_x_discrete(labels = age.labs) +
+      scale_y_continuous(labels = function(x) {scales::percent(abs(x))}, limits = c(-max,max)) +
+      scale_fill_manual(values = setNames(c("#EE5859", "#0067A9"), c(value_women, value_men))) +
+      labs(title = plot_title, subtitle=subtitle, x = "", y = paste0("% of ", tolower(unit), "s"), fill=paste0(unit, " gender")) +
+      theme_minimal() + theme(plot.title = element_text(hjust=0.5), plot.subtitle = element_text(hjust=0.5, size=9), legend.position = "bottom") +
+      coord_flip()
     
     if (!is.null(col_n_unw)) {
       plot <- plot + labs(caption=paste0("Distribution for a total ", sum(df[[col_n_unw]]), " ", tolower(unit), "s reporting both age and gender."))
     }
     
     if (!is.null(group_var)) {
-      plot <- plot + facet_grid(vars(!!sym(group_var)))
-    }
+      plot <- plot + facet_wrap(vars(!!sym(group_var)), ncol = n_col)
+      }
     
     if (save) write.csv(df_prop, dir, row.names = F)
     
